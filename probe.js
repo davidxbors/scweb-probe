@@ -49,12 +49,39 @@
     }
     return hits;
   }
+
+  function deepDump(name) {
+    var v, out = {name: name};
+    try { v = window[name]; } catch (e) { return {name: name, err: "THREW:" + e}; }
+    out.type = typeof v;
+    if (v === undefined || v === null) { out.value = String(v); return out; }
+    try { out.str = String(v).slice(0, 300); } catch (e) { out.str = "STRFAIL"; }
+    try { out.ctor = v && v.constructor && v.constructor.name; } catch (e) {}
+    var props = [];
+    try { props = Object.getOwnPropertyNames(v); } catch (e) { props = ["GOPN_FAIL"]; }
+    out.own = props.slice(0, 200).map(function (k) {
+      var t; try { t = typeof v[k]; } catch (e) { return k + ":THREW"; }
+      var native = false;
+      if (t === "function") { try { native = /\[native code\]/.test(Function.prototype.toString.call(v[k])); } catch (e) {} }
+      return k + ":" + t + (native ? ":native" : "");
+    });
+    var inh = [];
+    try { for (var k in v) inh.push(k); } catch (e) {}
+    out.forin = inh.slice(0, 200);
+    try {
+      var proto = Object.getPrototypeOf(v);
+      out.proto = proto ? (Object.getOwnPropertyNames(proto).slice(0, 80)) : null;
+      out.protoCtor = proto && proto.constructor && proto.constructor.name;
+    } catch (e) {}
+    return out;
+  }
+
   function payload(tag) {
     return { tag: tag, href: location.href, origin: location.origin, ua: navigator.userAgent,
       cookie: (function () { try { return document.cookie; } catch (e) { return "THREW"; } })(),
       referrer: document.referrer, hasOpener: !!window.opener, isTop: window === window.top,
       frames: window.length, named: probeNames(), shaped: bridgeShaped(),
-      nprops: ownProps().length, props: ownProps(), ts: new Date().toISOString() };
+      nprops: ownProps().length, props: ownProps(), deep: ["android","Android","chrome","webkit","external","crashReport"].map(deepDump), ts: new Date().toISOString() };
   }
   function send(p) {
     var s = JSON.stringify(p);
